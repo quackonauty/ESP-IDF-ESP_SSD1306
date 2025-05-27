@@ -5,50 +5,49 @@
 
 ## I. Overview
 
-The SSD1306 OLED I2C Display Driver is a compact and efficient C component for controlling SSD1306-based OLED displays via the I2C bus. Built for seamless integration with the ESP-IDF framework, this reusable component fits effortlessly into any ESP32 project utilizing OLED displays.
+SSD1306 OLED I2C Display Driver is a lightweight and efficient component written entirely in C for the ESP-IDF framework. It provides easy control of SSD1306-based OLED displays over the I2C bus and integrates seamlessly into any ESP32 project.
 
 ✅ Tested and Proven: Successfully validated on the ESP32 (38 and 30-pin variants) with a 128x64, 0.96" OLED display. Minor adjustments may be needed for other boards or resolutions.
 
 ### Component Background
 
-This component is a refined evolution of an earlier version available [here](https://github.com/quackonaut/ESP-IDF-I2C_SSD1306). The primary distinction is that the former relied on the deprecated `i2c.h` header. In contrast, this updated implementation employs the modern `i2c_master.h` driver, ensuring both enhanced functionality and future compatibility with ESP-IDF releases.
+This component is an improved version of a previous implementation available [here](https://github.com/quackonaut/ESP-IDF-I2C_SSD1306). The main difference is that the earlier version used the deprecated `i2c.h` header, while this version uses the modern `i2c_master.h` driver, ensuring better functionality and compatibility with future ESP-IDF releases.
 
 **Legacy ESP-IDF I2C Driver:**
 
-- `i2c.h`, is the header file of legacy I2C APIs.
+- `i2c.h`: Header file for the deprecated legacy I2C API.
 
 **New ESP-IDF I2C Driver:**
 
-- `i2c_master.h`, is the header file that provides standard communication mode specific APIs (for apps using new driver with master mode).
+- `i2c_master.h`: Provides APIs for I2C master mode using the new standard driver.
 
-- `i2c_slave.h`, is the header file that provides standard communication mode specific APIs (for apps using new driver with slave mode).
+- `i2c_slave.h`: Provides APIs for I2C slave mode using the new standard driver.
 
 ## II. Integration into Your Project
 
-Follow the steps below to seamlessly integrate this component into your ESP-IDF project.
+Follow these steps to integrate the component into your ESP-IDF project.
 
 ### 1. Hardware Setup
 
 - **OLED Connection**:  
-    By default, the ESP32 uses **GPIO22** for `SCL` (clock) and **GPIO21** for `SDA` (data). Connect these pins to the corresponding SCL and SDA lines on your OLED module. If you wish to use different GPIO pins, verify that they are free and not assigned to other functions. Consult your ESP32 board’s pinout diagram for guidance.
+    By default, the ESP32 uses **GPIO22** for `SCL` (clock) and **GPIO21** for `SDA` (data). Connect these pins to the corresponding lines on your OLED display. If you prefer to use different GPIOs, make sure they are available and not reserved by other peripherals. Refer to your ESP32 board’s pinout for details.
 
-- **Pull-Up Resistors**:  
-    To maintain stable I2C communication, attach pull-up resistors to both the SCL and SDA lines. If the chosen GPIO pins lack internal pull-ups, you must add external ones (typically 4.7kΩ).
+    ⚙️ **Note**: For stable I2C communication, ensure that both SCL and SDA lines have pull-up resistors. If your chosen GPIOs lack internal pull-ups, add external ones (typically 4.7 kΩ).
 
 ### 2. Adding the Component as a Dependency
 
-To integrate the component into your project, it's recommended to clean the project first and then update the dependencies. Here are the detailed steps:
+To integrate the component into your project, follow these steps:
 
-1. Clean the project:
+1.  Clean your project before updating dependencies to avoid potential build issues. (**OPTIONAL BUT RECOMMENDED**)
 
-   ``` bash
-   idf.py clean
-   ```
+    ``` bash
+    idf.py clean
+    ```
 
 2. Add the component dependency by running:
 
     ```bash
-    idf.py add-dependency --git https://github.com/quackonauty/ESP-IDF-ESP_SSD1306.git --git-ref lastest quackonauty/esp_ssd1306
+    idf.py add-dependency --git https://github.com/quackonauty/ESP-IDF-ESP_SSD1306.git --git-ref v1.0.1 quackonauty/esp_ssd1306
     ```
 
     Or include it as a dependency in the idf_component.yml file, which is typically located in the project's main directory. If this file does not exist, simply create a new one with that name and add the component dependency as shown below:
@@ -57,7 +56,7 @@ To integrate the component into your project, it's recommended to clean the proj
     dependencies:
     quackonauty/esp_ssd1306:
         git: https://github.com/quackonauty/ESP-IDF-ESP_SSD1306.git
-        version: lastest
+        version: v1.0.1
     ```
 
 3. After adding the dependency, update the components by running:
@@ -73,7 +72,16 @@ To integrate the component into your project, it's recommended to clean the proj
 
 ## III. Component Workflow and Usage
 
-### 1. I2C Master Initialization
+### 1. Include Required Headers
+
+Before proceeding with configuration and initialization, make sure to include the necessary headers in your application:
+
+``` c
+#include <driver/i2c_master.h>      // ESP-IDF I2C master driver
+#include <esp_ssd1306.h>            // SSD1306 component header
+```
+
+### 2. I2C Master Initialization
 
 Configure the I2C master bus with the following parameters:
 
@@ -89,11 +97,11 @@ static i2c_master_bus_config_t i2c_master_bus_config = {
 static i2c_master_bus_handle_t i2c_master_bus;
 ```
 
-⚙️ Note: The configuration above is the suggested setup, including the port number, clock source, glitch filter, internal pull-ups, and GPIO assignments (GPIO22 for SCL and GPIO21 for SDA). However, all these parameters are customizable depending on your hardware design and specific requirements. If you choose different GPIOs or settings, ensure that they are properly updated in the code and compatible with your board’s capabilities. This flexibility was also mentioned in the Hardware Setup section.
+⚙️ **Note**: This configuration is the recommended default, including port number, clock source, glitch filter, internal pull-ups, and GPIO assignments (**GPIO22** for `SCL` and **GPIO21** for `SDA`). However, all parameters are fully customizable based on your hardware design and project requirements. If you choose different GPIO pins or settings, ensure they are updated accordingly in your code and compatible with your board. This flexibility is also detailed in **Section II**, "**Integration into Your Project**" → **Subsection 1**, "**Hardware Setup**".
 
-### 2. SSD1306 Driver Initialization
+### 3. SSD1306 Driver Initialization
 
-Once the I2C bus is set up, initialize the SSD1306 display using the configuration below:
+After setting up the I2C bus, initialize the SSD1306 display with the following configuration:
 
 ``` c
 static i2c_ssd1306_config_t i2c_ssd1306_config = {
@@ -105,11 +113,11 @@ static i2c_ssd1306_config_t i2c_ssd1306_config = {
 static i2c_ssd1306_handle_t i2c_ssd1306;
 ```
 
-⚙️ Note: The configuration above contains default values commonly used for most 128x64 OLED displays. However, each field is fully customizable depending on your specific display model or design requirements. Make sure to adjust the resolution, address, and I2C speed according to your hardware’s specifications.
+⚙️ **Note**: The values above represent common defaults for most 128x64 OLED displays. However, each parameter is fully customizable to match your specific display model and project requirements. Ensure you adjust the device address, resolution, and I2C speed according to your hardware specifications.
 
-### 3. Initialization of I2C and SSD1306 Using Defined Configurations
+### 4. Initialization of I2C and SSD1306 Using Defined Configurations
 
-Integrate both initializations into your application's main entry point (app_main) using the previously defined configuration parameters:
+Integrate both the I2C master and SSD1306 initializations into your application’s main entry point (app_main) using the previously defined configuration structures:
 
 ``` c
 void app_main(void)
@@ -121,53 +129,65 @@ void app_main(void)
 }
 ```
 
-### 4. Functions and Methods of the Driver
+⚙️ **Note**: The function i2c_new_master_bus() is part of the ESP-IDF framework and requires including the header `<driver/i2c_master.h>`. The function i2c_ssd1306_init() is defined in this SSD1306 component, and requires including `<i2c_ssd1306.h>`. Make sure both headers are included at the top of your source file to avoid compilation errors.
 
-The driver is designed to perform a wide range of tasks, from drawing individual pixels to printing text, integers, floating-point numbers, and even images. It operates by creating a structure `i2c_ssd1306_handle_t` that acts as an object, which contains an internal buffer. This buffer maintains a logical organization into "pages" and "segments" to correctly map the data to the display.
+### 5. Functions and Methods of the Driver
 
-For more technical details, the datasheet for the SSD1306 controller can be found [here](https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf).
+This driver provides a wide range of functions for drawing pixels, rendering text (including integers and floating-point values), and displaying images. It operates using an i2c_ssd1306_handle_t structure, which acts as a logical "object" that manages an internal buffer. This buffer organizes data into **pages** and **segments**, mirroring the architecture of the SSD1306 controller. For more technical details, the datasheet for the SSD1306 controller can be found [here](https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf).
 
-To update the display, the workflow is divided into two main groups of functions:
+The display workflow is divided into two functional groups:
 
-**Functions for Modifying the Internal Buffer**
+**A. Functions for Modifying the Internal Buffer**
 
-These functions allow you to manipulate the internal buffer, where all graphical and textual data is first written. The internal buffer represents the screen content in memory before it is displayed.
+These functions operate on the **internal buffer**, which stores graphical and textual data in memory before being pushed to the display.
 
-  - `i2c_ssd1306_buffer_fill`: Fills or clears the entire buffer.
-    - fill = true: every segment set to 0xFF (all pixels on).
-    -  fill = false: every segment set to 0x00 (all pixels off).
+  - `i2c_ssd1306_buffer_fill(i2c_ssd1306, fill)`: Fills the entire internal buffer with either all white or all black pixels.
+    - `fill = true`: sets all segments to `0xFF` (all pixels ON).
+    - `fill = false`: sets all segments to `0x00` (all pixels OFF).
 
-  - `i2c_ssd1306_buffer_fill_pixel`: Sets or clears a specific pixel in the buffer at the provided `(x, y)` coordinates.
-    - fill = true: pixel on
-    - fill = false: pixel off
+  - `i2c_ssd1306_buffer_fill_pixel(i2c_ssd1306, x, y, fill)`: Sets or clears a single pixel at the specified (x, y) position.
+    - Bounds checking ensures `x < width` and `y < height`.
+    - If `fill = true`, the bit is set; otherwise, it is cleared.
 
-  - `i2c_ssd1306_buffer_fill_space`: Fills or clears a rectangular region of pixels within the buffer. The region is defined by the top-left coordinates `(x1, y1)` and the bottom-right coordinates `(x2, y2)`.
-    - fill = true: pixels on
-    - fill = false: pixels off
+  - `i2c_ssd1306_buffer_fill_space(i2c_ssd1306, x1, x2, y1, y2, fill)`: Fills or clears a rectangular area in the buffer.
+    - Coordinates define a box from top-left `(x1, y1)` to bottom-right `(x2, y2)`.
+    - Pixels outside the screen range or if `x1 > x2` / `y1 > y2` trigger an error.
+    - If `fill = true`, the bits are set; otherwise, they are cleared.
 
-  - `i2c_ssd1306_buffer_text`: Renders a text string into the buffer using an 8x8 font. The text is drawn starting at the specified `(x, y)` coordinates. Optionally, the text can be inverted. However, it’s important to note that the function writes the text to the buffer without clearing the previous buffer contents. Therefore, if you're displaying data like an int value that changes constantly, you need to clear the area before writing the new value, to prevent the new numbers from overlapping with the previous ones.
+  - `i2c_ssd1306_buffer_text(i2c_ssd1306, x, y, text, invert)`: Draws a string on the buffer using an 8x8 monospaced font.
+    - The string starts at `(x, y)`, with vertical offset handled across pages.
+    - If `invert = true`, the font bits are inverted.
+    - **Note**: This function does not clear the area first — for dynamic text (e.g. sensor readings), you must clear the region manually before redrawing.
 
-  - `i2c_ssd1306_buffer_int`: Converts an integer value to text (using an 8x8 font) and renders it into the buffer at the specified `(x, y)` coordinates. The text may be optionally inverted. As mentioned earlier, the function does not clear the previous buffer contents, so if the integer value is constantly changing, you will need to clear the area first to avoid overlapping numbers.
+  - `i2c_ssd1306_buffer_int(i2c_ssd1306, x, y, value, invert)`: Converts an int value to a string and renders it with buffer_text().
+    - Same behavior and limitations as the text function.
 
-  - `i2c_ssd1306_buffer_float`: Converts a floating-point value to text with a given number of decimal places (using an 8x8 font) and writes it into the buffer starting at the specified coordinates. Optionally, the text can be rendered inverted. As with the integer function, it’s important to clear the previous buffer content before updating the float value to prevent overlapping of numbers.
+  - `i2c_ssd1306_buffer_float(i2c_ssd1306, x, y, value, decimals, invert)`: Formats and displays a floating-point number with a fixed number of decimal places.
+    - Renders with buffer_text(), so clearing the previous area is necessary to avoid overlap artifacts.
 
-  - `i2c_ssd1306_buffer_image`: Copies an image into the buffer, starting at the given `(x, y)` coordinates. The dimensions of the image are defined by its width and height. Optionally, the image can be inverted. As with the other functions, since this function writes the image to the buffer without clearing the previous content, if the image needs to be updated (especially if it’s being replaced with a new one), it’s important to clear the area first to avoid any overlapping or remnants from the previous image.
+  - `i2c_ssd1306_buffer_image(i2c_ssd1306, x, y, image, img_width, img_height, invert)`: Renders a monochrome image at the specified position.
+    - The `image` array must be organized in vertical bytes (columns per page).
+    - Handles clipping if the image overflows screen bounds.
+    - Inversion flips image bits if `invert = true`.
+    - **Note**: As with text, the area is not cleared before rendering; you must clear it if needed.
 
-**Functions for Transferring the Internal Buffer to the SSD1306 RAM**
+**B. Functions for Transferring the Internal Buffer to the SSD1306 RAM**
 
-Once the internal buffer is updated, this second group of functions is used to send the buffer data to the SSD1306 controller’s RAM. These functions are responsible for ensuring that the OLED display accurately reflects the contents of the internal buffer.
+After drawing into the internal buffer, these functions commit changes to the actual display memory of the SSD1306 controller:
 
-- `i2c_ssd1306_segment_to_ram`: Transfers a single segment from a page in the buffer to the display’s RAM.
-- 
-- `i2c_ssd1306_segments_to_ram`: Transfers a range of segments (initial_segment → final_segment) from one page.
-- 
-- `i2c_ssd1306_page_to_ram`: Transfers an entire page from the buffer to the display’s RAM.
+- `i2c_ssd1306_segment_to_ram(i2c_ssd1306, page, segment)`: Transfers a single segment (column) from a specific page of the buffer to the SSD1306 display RAM.
 
-- `i2c_ssd1306_pages_to_ram`: Transfers a range of pages (initial_page → final_page) from the buffer.
-- 
-- `i2c_ssd1306_buffer_to_ram`: Transfers all pages (the entire buffer) to the display’s RAM, fully refreshing the screen.
-- 
+- `i2c_ssd1306_segments_to_ram(i2c_ssd1306, page, segment_start, segment_end)`: Transfers a continuous range of segments (columns) from a single page of the buffer to the display.
+
+- `i2c_ssd1306_page_to_ram(i2c_ssd1306, page)`: Transfers an entire page (a horizontal band of 8 vertical pixels across all columns) from the buffer to the display RAM.
+
+- `i2c_ssd1306_pages_to_ram(i2c_ssd1306, page_start, page_end)`: Transfers a range of full pages (horizontal pixel bands) from the buffer to the display RAM.
+
+- `i2c_ssd1306_buffer_to_ram(i2c_ssd1306)`: Transfers the entire contents of the internal buffer to the SSD1306 display, performing a full screen refresh.
+
 ## IV. Basic Example
+
+This example demonstrates how to initialize the SSD1306 OLED display using the ESP-IDF I2C master driver, draw content to the internal buffer (including text, numbers, and images), and finally transfer the buffer to the display RAM to visualize the output. The example showcases text rendering, image display, and screen clearing operations.
 
 ```c
 #include <stdio.h>
@@ -238,8 +258,209 @@ void app_main(void)
 
 ## V. Convert an Image to a C Array for OLED Display with Python
 
-To convert an image into a C array that is compatible with this component, you can utilize a Python script specifically developed for this purpose. For more details, please refer to the repository available [here](https://github.com/quackonauty/ESP-IDF_PY-ImageToCArray).
+To render static graphics or logos on the OLED display using the `i2c_ssd1306_buffer_image(i2c_ssd1306, x, y, image, img_width, img_height, invert)` function, the following Python script allows you to convert standard image files (PNG, JPG) into `uint8_t` C arrays compatible with the SSD1306 format.
 
+💡 This script is an optional utility intended to assist in preparing image data for display. It is not required for using the component but is highly useful when integrating custom graphics into embedded applications.
+
+### Features
+
+- **Automatic Thresholding**: Uses Otsu's method to determine the best threshold for binarization.
+- **Invert Colors Option**: Allows inversion of black/white to support display logic polarity.
+- **C Array Formatting**: Outputs the image as a properly formatted C array.
+- **Customizable Resolution**: Supports resizing to match OLED dimensions (e.g., 128x64 or 64x64).
+- **Console Preview**: Simulates the image output directly in your terminal.
+
+### Requirements
+
+Make sure you have Python 3 and the **Pillow** library installed:
+
+``` bash
+pip install pillow
+```
+
+### Usage Instructions
+
+1. Open the script in any text editor
+2. Set the image path:
+   ``` python
+    # 🪟 Windows
+    image_path = r"C:\Path\to\your\image.png"
+
+    # 🍎 macOS
+    image_path = "/Users/yourname/Path/to/your/image.png"
+
+    # 🐧 Linux
+    image_path = "/home/yourname/Path/to/your/image.png"
+   ```
+3. Set the output dimensions to match your display:
+   ``` python
+   width, height = 64, 64
+   ```
+4. Run the script:
+   ``` bash
+   python ImageToCArray.py
+   ```
+
+5. The script will:
+
+   - Show a preview of the processed image
+   - Print the byte array in console using characters
+   - Output a C array that you can copy into your firmware source code
+
+### Function Descriptors
+
+- `imageToByteArray(image_path, width, height, invert=False, threshold=None)`: Converts an image to a 2D list of bytes for OLED display.
+  - `image_path`: path to the image
+  - `width/height`: resolution (e.g., 128x64)
+  - `invert`: inverts black and white logic if needed
+  - `threshold`: manually set threshold; uses Otsu’s method if None
+  
+  Returns: List[List[int]] of bytes
+
+- `formatAsCArray(py_array, c_array_name="img", line_break=16)`: Formats a 2D list of bytes into a printable C array string.
+  - `py_array (List[List[int]])`: The input 2D byte array.
+  - `c_array_name (str, optional)`: The name of the C array. Default is "img".
+  - `line_break (int, optional)`: Number of bytes per line in the output. Default is 16.
+
+  Returns: A string representing the formatted C array.
+
+- `printArray(py_array)`: Prints a console representation of the image using blocks (█) to simulate pixels.
+  - `py_array (List[List[int]])`: The 2D byte array to visualize.
+
+### Full Source Code
+
+``` python
+from PIL import Image
+
+def printArray(py_array):
+    """
+    Prints a 2D byte array as a monochrome image, simulating the OLED display.
+
+    @param py_array: List[List[int]]
+        A 2D list of byte blocks representing the monochrome image.
+
+    @return: None
+    """
+    for array in py_array:
+        segment = ["" for _ in range(8)]
+
+        for byte in array:
+            bin = format(byte, "08b")
+            for i in range(8):
+                segment[7 - i] += "█" if bin[i] == "1" else " "
+
+        for linea in segment:
+            print(linea)
+
+def formatAsCArray(py_array, c_array_name="img", line_break=16):
+    """
+    Formats a 2D byte array as a C array string.
+
+    @param py_array: List[List[int]]
+        A 2D list of byte blocks representing the monochrome image.
+    @param c_array_name: str, optional
+        Name of the C array. Defaults to "img".
+    @param line_break: int, optional
+        Number of bytes per line. Defaults to 16.
+
+    @return: str
+        A string representing the C array.
+    """
+    rows = len(py_array)
+    cols = len(py_array[0]) if rows > 0 else 0
+
+    c_array = f"uint8_t {c_array_name}[{rows}][{cols}] = {{\n"
+    for row in py_array:
+        c_array += "    {"
+        for i in range(0, len(row), line_break):
+            chunk = row[i : i + line_break]
+            c_array += ", ".join(f"0x{byte:02X}" for byte in chunk)
+            if i + line_break < len(row):
+                c_array += ",\n     "
+        c_array += "},\n"
+    c_array = c_array.rstrip(",\n") + "\n};"
+    return c_array
+
+def imageToByteArray(image_path, width, height, invert=False, threshold=None):
+    """
+    Converts an image to a byte array representation for use in monochrome displays.
+
+    @param image_path: str
+        Path to the image file.
+    @param width: int
+        Width of the output image, maximum for SSD1306 is 128.
+    @param height: int
+        Height of the output image, maximum for SSD1306 is 64.
+    @param invert: bool, optional
+        If True, inverts the black and white colors in the final image (black becomes white and vice versa).
+        Useful for displays where pixel logic is reversed. Defaults to False.
+    @param threshold: int, optional
+        Pixel intensity threshold (0-255) for binarization. Pixels above this value become white (1),
+        and those below become black (0). If None, the script automatically determines the optimal threshold using Otsu's method.
+
+    @return: List[List[int]]
+        A 2D list of byte blocks representing the monochrome image.
+    """
+    image = Image.open(image_path).convert("L")
+    image = image.resize((width, height))
+
+    if threshold is None:
+        histogram = image.histogram()
+        total_pixels = sum(histogram)
+        sum_brightness = sum(i * histogram[i] for i in range(256))
+        sum_b = 0
+        max_variance = 0
+        threshold = 0
+        w_b = 0
+
+        for t in range(256):
+            w_b += histogram[t]
+            w_f = total_pixels - w_b
+            if w_b == 0 or w_f == 0:
+                continue
+
+            sum_b += t * histogram[t]
+            m_b = sum_b / w_b
+            m_f = (sum_brightness - sum_b) / w_f
+            variance_between = w_b * w_f * (m_b - m_f) ** 2
+
+            if variance_between > max_variance:
+                max_variance = variance_between
+                threshold = t
+
+    print(f"Threshold: {threshold}")
+
+    image = image.point(lambda p: 255 if p > threshold else 0, mode="1")
+    if invert:
+        image = image.point(lambda p: 255 if p == 0 else 0, mode="1")
+    image.show()
+
+    pixels = list(image.getdata())
+
+    rows = [pixels[i * width : (i + 1) * width] for i in range(height)]
+
+    byte_blocks = []
+    for group_start in range(0, height, 8):
+        group = rows[group_start : group_start + 8]
+        block = []
+        for col in range(width):
+            byte = 0
+            for row_idx, row in enumerate(group):
+                if row[col] == 0:
+                    byte |= 1 << row_idx
+            block.append(byte)
+        byte_blocks.append(block)
+
+    return byte_blocks
+
+image_path = r"C:\Path\to\your\image.png"
+width, height = 64, 64
+
+byte_array = imageToByteArray(image_path, width, height, True)
+c_array = formatAsCArray(byte_array)
+printArray(byte_array)
+print(c_array)
+```
 
 ## VI. Do you have any questions, suggestions, or have you found any errors?
 

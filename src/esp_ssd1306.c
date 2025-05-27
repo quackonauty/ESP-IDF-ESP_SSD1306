@@ -228,7 +228,7 @@ esp_err_t i2c_ssd1306_buffer_text(i2c_ssd1306_handle_t *i2c_ssd1306, uint8_t x, 
                 i2c_ssd1306->buffer[index] |= lower_part;
                 if (has_next_page)
                 {
-                    i2c_ssd1306->buffer[index + 1] |= upper_part;
+                    i2c_ssd1306->buffer[index + i2c_ssd1306->width] |= upper_part;
                 }
             }
         }
